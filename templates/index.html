@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>Company Enrichment</title>
+
+    <style>
+
+        body{
+            font-family:Arial;
+            margin:40px;
+        }
+
+        input{
+            width:400px;
+            padding:10px;
+        }
+
+        button{
+            padding:10px;
+            cursor:pointer;
+        }
+
+        pre{
+            background:#f4f4f4;
+            padding:20px;
+            white-space:pre-wrap;
+        }
+
+        table{
+            border-collapse:collapse;
+            width:100%;
+        }
+
+        td,th{
+            border:1px solid black;
+            padding:8px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<h1>Company Enrichment Tool</h1>
+
+<h3>Enter Company URL inside array</h3>
+
+<p>
+Expected format:
+</p>
+
+<pre>
+["https://www.zoho.com","https://buffer.com"]
+</pre>
+
+<input
+    id="url"
+    placeholder='["https://www.zoho.com"]'
+/>
+
+<button onclick="enrichCompany()">Enrich</button>
+
+<p id="loading"></p>
+
+<h2>Result</h2>
+
+<pre id="result"></pre><hr>
+
+<button onclick="showResults()">
+    Show All Results
+</button>
+
+<div id="results"></div>
+
+<script>
+
+async function enrichCompany() {
+
+    let input =
+    document.getElementById("url").value;
+
+    let urls;
+
+    try {
+
+        urls = JSON.parse(input);
+
+        if (!Array.isArray(urls)) {
+            throw new Error("Not an array");
+        }
+
+    } catch {
+
+        alert(
+            'Please enter URLs as a JSON array.\n\nExample:\n["https://www.zoho.com","https://buffer.com"]'
+        );
+
+        return;
+    }
+
+    document.getElementById(
+        "loading"
+    ).innerText =
+        "Generating results... Please wait.";
+
+    await new Promise(
+        resolve => setTimeout(resolve, 100)
+    );
+
+    let response =
+    await fetch(
+        "/enrich/",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                urls: urls
+            })
+        }
+    );
+
+    let data = await response.json();
+
+    document.getElementById(
+        "loading"
+    ).innerText = "";
+
+    document.getElementById("result").innerText =
+        JSON.stringify(data, null, 2);
+}
+
+async function showResults(){
+
+    let response =
+    await fetch(
+        "/results/"
+    );
+
+    let data =
+    await response.json();
+
+    let html =
+    "<table>";
+
+    html +=
+    "<tr>";
+
+    html +=
+    "<th>ID</th>";
+
+    html +=
+    "<th>Company</th>";
+
+    html +=
+    "<th>Email</th>";
+
+    html +=
+    "<th>Service</th>";
+
+    html +=
+    "</tr>";
+
+    data.forEach(row => {
+
+        html +=
+        `<tr>
+
+            <td>${row.id}</td>
+
+            <td>${row.company_name}</td>
+
+            <td>${row.mail}</td>
+
+            <td>${row.core_service}</td>
+
+        </tr>`;
+    });
+
+    html +=
+    "</table>";
+
+    document.getElementById(
+        "results"
+    ).innerHTML =
+    html;
+}
+
+</script>
+
+</body>
+</html>
